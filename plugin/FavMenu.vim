@@ -1,5 +1,5 @@
-" Author: Gergely Kontra <pihentagy@gmail.com>
-" Version: 0.33
+" Author: Gergely Kontra <pihentagy@gmail.com> {{{1
+" Version: 0.34
 " Description:
 "    Adds a new menu to vim
 "    You can add your favourite files (and directories) into it
@@ -8,21 +8,21 @@
 "
 " Installation: Drop it into your plugin directory
 "
-" History:
+" History: {{{1
 "    0.1: Initial release
 "    0.2:
-"	  * Fixed bug, which caused same files to hide each other
+"         * Fixed bug, which caused same files to hide each other
 "         * Your favourite files must be located at $FAVOURITES
-"	  * You can Edit the favourites. Menus will updated, when you save
+"         * You can Edit the favourites. Menus will updated, when you save
 "         * When you click on the menu, it invokes the fav_fun function
 "         * You can choose cascade delete menu by defining fav_cascade_del
-"	    (at startup!)
+"           (at startup!)
 "         * You can add directories to your favourites
 "           Thanks to the_intellectual_person <arun_kumar_ks@hotmail.com>,
 "           who gave me a patch for this
 "    0.21:* Fixed bug, which caused not to update you menu, when you remove
-"	    one of your favourites
-"	  * Fixed REGEXP bug (When removing files)
+"           one of your favourites
+"         * Fixed REGEXP bug (When removing files)
 "    0.22:* Nice fallbacks, if $FAVOURITES is not defined.
 "         * fav_fun is renamed to OPEN_FUNC, so you can store it in your
 "           viminfo file, and can be reused in my MRU script. Sorry for the
@@ -31,62 +31,98 @@
 "           defining (and setting) the PATHSIZELIMIT variable.
 "         * Added menu: Refresh (will be removed in a later release)
 "    0.24:* Close the file, even when 'hidden' is set
-"            Thanks to Roger Pilkey for the bug report
+"           Thanks to Roger Pilkey for the bug report
 "    0.3: * Use clientserver feature to synchronize the menu instances
 "    0.31:* Shut up clientserver stuff
 "    0.32:* Hungarian translation
 "    0.33:* Spanish translation (thanks to Switcher)
-"         * bugfix
-"
-" TODO:
+"    0.34 * v0.34开始由NothingIsBig修改完成
+"         * Chinese translation
+"         * Tabnew favfile when file is not modified
+"         * 移动菜单项到第7项（窗口菜单后面）
+"         * 快捷键1-9，A-Z。把A、E、R快捷键屏蔽（已经是修改收藏夹的快捷键）
+"         * 删除所有tab，统一文档格式，tabstop=2，shiftwidth=2，expandab开启
+" TODO: {{{1
 "    Are all valid filenames escaped? (Feedback please!)
+" 变量和语言文件 {{{1
 let s:cascade_del=exists('fav_cascade_del')
 let texts = {
-	\ 'EN': {
-		\ 'confirmmsg1': 'This is already in your favourites file!',
-		\ 'confirmmsg2': 'Cannot find this file in your favourites file!',
-		\ 'menu': {
-			\ 'main': 'Fa&vourites',
-			\ 'add': '&Add\ current\ file',
-			\ 'remove_cascade': '&Remove',
-			\ 'remove': '&Remove\ current\ file',
-			\ 'edit': '&Edit\ favourites',
-			\ 'refresh': 'Re&fresh'}},
-	\'ES': {'confirmmsg1': '�Esto ya existe en el archivo de favoritos!',
-		\ 'confirmmsg2': '�Este archivo no se encuentra en el archivo de favoritos!',
-		\ 'menu': {
-			\ 'main': 'Fa&voritos',
-			\ 'add': '&Agregar\ archivo\ actual',
-			\ 'remove_cascade': 'Elimina&r',
-			\ 'remove': 'Elimina&r\ archivo\ actual',
-			\ 'edit': '&Editar\ favoritos',
-			\ 'refresh': 'Actualizar'}},
-	\ 'HU': {
-		\ 'confirmmsg1': 'Ez a f�jl m�r a kedvenceid k�z�tt van!',
-		\ 'confirmmsg2': 'Nem tal�lom ezt a f�jlt a kedvenceid k�z�tt!',
-		\ 'menu': {
-			\ 'main': 'Ked&vencek',
-			\ 'add': '&Aktu�lis\ f�jl\ hozz�ad�sa',
-			\ 'remove_cascade': '&Elt�vol�t�s',
-			\ 'remove': '&Aktu�lis\ f�jl\ elt�vol�t�sa',
-			\ 'edit': 'K&edvencek\ rendez�se',
-			\ 'refresh': 'A&ktualiz�l�s'}}}
-
+  \ 'EN': {
+    \ 'confirmmsg1': 'This is already in your favourites file!',
+    \ 'confirmmsg2': 'Cannot find this file in your favourites file!',
+    \ 'menu': {
+      \ 'main': 'Fa&vourites',
+      \ 'add': '&Add\ current\ file',
+      \ 'remove_cascade': '&Remove',
+      \ 'remove': '&Remove\ current\ file',
+      \ 'edit': '&Edit\ favourites',
+      \ 'refresh': 'Re&fresh'}},
+  \ 'ZH_CN': {
+    \ 'confirmmsg1': '这个文件已经存在于收藏夹中！',
+    \ 'confirmmsg2': '收藏夹中找不到这个文件！',
+    \ 'menu': {
+      \ 'main': '收藏夹(&V)',
+      \ 'add': '添加到收藏夹(&A)',
+      \ 'remove_cascade': '从收藏夹移除(&R)',
+      \ 'remove': '移除当前文件(&R)',
+      \ 'edit': '整理收藏夹(&E)',
+      \ 'refresh': '刷新收藏夹列表(&R)'}},
+  \ 'ES': {'confirmmsg1': 'sto ya existe en el archivo de favoritos!',
+    \ 'confirmmsg2': 'ste archivo no se encuentra en el archivo de favoritos!',
+    \ 'menu': {
+      \ 'main': 'Fa&voritos',
+      \ 'add': '&Agregar\ archivo\ actual',
+      \ 'remove_cascade': 'Elimina&r',
+      \ 'remove': 'Elimina&r\ archivo\ actual',
+      \ 'edit': '&Editar\ favoritos',
+      \ 'refresh': 'Actualizar'}},
+  \ 'HU': {
+    \ 'confirmmsg1': 'Ez a fájl már a kedvenceid k?z?tt van!',
+    \ 'confirmmsg2': 'Nem találom ezt a fájlt a kedvenceid k?z?tt!',
+    \ 'menu': {
+      \ 'main': 'Ked&vencek',
+      \ 'add': '&Aktuális\ fájl\ hozzáadása',
+      \ 'remove_cascade': '&Eltávolítás',
+      \ 'remove': '&Aktuális\ fájl\ eltávolítása',
+      \ 'edit': 'K&edvencek\ rendezése',
+      \ 'refresh': 'A&ktualizálás'}}
+  \ }
 " If $LANG not in "texts", then use english translation for default
-if !has_key(texts, toupper($LANG))
+if has_key(texts, toupper($LANG))
+  let texts[$LANG] = texts[toupper($LANG)]
+else
   let texts[$LANG] = texts["EN"]
 endif
 
+" 主程序 {{{1
 if !exists('$FAVOURITES')
-  let $FAVOURITES=$HOME.'/.vimfavourites'
+    if has('unix')
+        let $FAVOURITES=$HOME.'/.vimfavourites'
+    el
+        let $FAVOURITES=$VIM.'\_vimfavourites'
+    en
 en
 
 if !exists('SpWhenModified') "integration with FavMenu
   fu! SpWhenModified(f)
-    if &mod
-      exe 'sp '.a:f
+    " if &mod
+    "   exe 'sp '.a:f
+    " el
+    "   exe 'e '.a:f
+    " en
+    " let $AA=bufname("").a:f.(match(a:f,bufname(''))=="-1")
+    if bufname('')==''
+      if &mod
+        exe 'tabedit '.a:f
+      el
+        exe 'e '.a:f
+      en
     el
-      exe 'e '.a:f
+      if (&mod || (match(a:f,bufname(''))=="-1"))
+        exe 'tabedit '.a:f
+      el
+        exe 'e '.a:f
+      en
     en
   endf
   fu! SpWhenNamedOrModified(f)
@@ -122,11 +158,21 @@ fu! s:AddThisFile(name)
 
   let fn=escape(fnamemodify(fullname,':p:t'),'\. #%')
   if strlen(fn)
-    let item='[&'.s:cnt.']\ \ '.fn.'<Tab>'.path
+    let item='[&'.nr2char(s:cnt).']\ \ '.fn.'<Tab>'.path
   el
-    let item='[&'.s:cnt.']\ \ <DIR><Tab>'.path
+    let item='[&'.nr2char(s:cnt).']\ \ <DIR><Tab>'.path
   en
-  let s:cnt=s:cnt+1
+  if s:cnt == 57
+    let s:cnt = 66 "A是添加到收藏夹的快捷键，跳过
+  elseif s:cnt == 68
+    let s:cnt = 70 "E是整理收藏夹的快捷键，跳过
+  elseif s:cnt == 81
+    let s:cnt = 83 "R是刷新、删除收藏夹的快捷键，跳过
+  elseif s:cnt == 90
+    let s:cnt = 49
+  else
+    let s:cnt=s:cnt+1
+  en
   exe 'amenu '.g:texts[$LANG]['menu']['main'].".".item." :cal \<C-r>=OpenFile()<CR>('".escape(fullname,'#%')."')<CR>"
   if s:cascade_del
     exe 'amenu '.g:texts[$LANG]['menu']['main'].".".g:texts[$LANG]['menu']['remove_cascade'].'.'.item." :cal <SID>RemoveThisFile('".fullname."')<CR>"
@@ -169,24 +215,23 @@ fu! s:RefreshAll()
       let s=matchstr(servers,re,pos)
       let pos=pos+strlen(s)+1
       if v:servername!=s
-	cal remote_expr(s,'FavmenuInit()')
+        cal remote_expr(s,'FavmenuInit()')
       en
     endw
   en
 endf
 
 fu!  FavmenuInit()
-  let s:cnt=1
+  let s:cnt=char2nr("1")
   exe "sil! aun ".g:texts[$LANG]['menu']['main']
-  exe "amenu 65.1 ".g:texts[$LANG]['menu']['main'].".".g:texts[$LANG]['menu']['add']." :cal <SID>AddThisFilePermanent(@%)<CR>"
-  exe "amenu 65.3 ".g:texts[$LANG]['menu']['main'].".".g:texts[$LANG]['menu']['edit']." :cal <C-r>=OpenFile()<CR>($FAVOURITES)<CR>:au BufWritePost $FAVOURITES cal FavmenuInit()<CR>"
-  exe "amenu 65.4 ".g:texts[$LANG]['menu']['main'].".".g:texts[$LANG]['menu']['refresh']." :cal FavmenuInit()<CR>"
-  exe "amenu 65.5 ".g:texts[$LANG]['menu']['main'].".-sep-	<nul>"
+  exe "amenu 75.1 ".g:texts[$LANG]['menu']['main'].".".g:texts[$LANG]['menu']['add']." :cal <SID>AddThisFilePermanent(@%)<CR>"
+  exe "amenu 75.3 ".g:texts[$LANG]['menu']['main'].".".g:texts[$LANG]['menu']['edit']." :cal <C-r>=OpenFile()<CR>($FAVOURITES)<CR>:au BufWritePost $FAVOURITES cal FavmenuInit()<CR>"
+  exe "amenu 75.4 ".g:texts[$LANG]['menu']['main'].".".g:texts[$LANG]['menu']['refresh']." :cal FavmenuInit()<CR>"
+  exe "amenu 75.5 ".g:texts[$LANG]['menu']['main'].".-sep- <nul>"
   if s:cascade_del
-    exe "amenu 65.2 ".g:texts[$LANG]['menu']['main'].".".g:texts[$LANG]['menu']['remove_cascade'].".Dummy <Nop>"
-  el
-    exe "amenu 65.2 ".g:texts[$LANG]['menu']['main'].".".g:texts[$LANG]['menu']['remove']." :cal <SID>RemoveThisFile(@%)<CR>"
+    exe "amenu 75.2 ".g:texts[$LANG]['menu']['main'].".".g:texts[$LANG]['menu']['remove_cascade'].".Dummy <Nop>"
   en
+  exe "amenu 75.2 ".g:texts[$LANG]['menu']['main'].".".g:texts[$LANG]['menu']['remove']." :cal <SID>RemoveThisFile(@%)<CR>"
 
   if filereadable($FAVOURITES)
     sv $FAVOURITES|se bh=delete
@@ -200,3 +245,4 @@ endf
 
 sil! cal FavmenuInit()
 
+" vim:tw=0:ts=2:sw=2:ft=vim:expandtab:
